@@ -3,10 +3,13 @@
     <string name="promptWorkout">Choose a workout</string>
     <string name="prompt">Choose a week series</string>
     <string name="done">Done!</string>
+    <string name="go">Do exercise\nand press "Done"</string>
     <string name="congratulations">Congratulations!</string>
     <string name="up">+</string>
     <string name="down">-</string>
     <string name="lastWorkout">lastWorkout</string>
+    <string name="ext">.history</string>
+    <string name="settings">settings.json</string>
     <string-array name="workouts">
         <item>PullUp</item>
         <item>PushUp</item>

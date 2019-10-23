@@ -1,0 +1,8 @@
+{
+  "PullUp": {
+    "timeout": 120
+  },
+  "PushUp": {
+    "timeout": 120
+  }
+}

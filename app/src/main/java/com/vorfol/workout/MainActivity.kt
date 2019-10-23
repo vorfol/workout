@@ -1,6 +1,8 @@
 package com.vorfol.workout
 
 import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
 import android.content.Context
 import android.icu.text.SimpleDateFormat
 import androidx.appcompat.app.AppCompatActivity
@@ -11,10 +13,14 @@ import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kotlinx.android.synthetic.main.activity_main.*
+import org.json.JSONObject
 import java.io.File
 import java.util.*
 
+data class WorkoutSettings(var timeout: Long)
 
 class MainActivity : AppCompatActivity() {
 
@@ -101,6 +107,11 @@ class MainActivity : AppCompatActivity() {
             // 1. hide spinner
             workoutSpinner.visibility = INVISIBLE
             weekSpinner.visibility = INVISIBLE
+            goText.visibility = INVISIBLE
+
+            val lastWorkout = prefs.getInt(lastWorkoutKey, 0)
+            val settings = loadSettings(workouts[lastWorkout])
+
             if (currentAmount.text.isNotEmpty()) {
                 // 2. save done value
                 var appendStatistics = currentAmount.text.toString() + " "
@@ -135,15 +146,14 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 if (appendStatistics.isNotEmpty()) {
-                    val lastWorkout = prefs.getInt(lastWorkoutKey, 0)
-                    val statistics = File(getExternalFilesDir(null), workouts[lastWorkout])
+                    val statistics = File(getExternalFilesDir(null), workouts[lastWorkout] + getString(R.string.ext))
                     statistics.appendText(appendStatistics)
                 }
                 // 4. start countdown
                 done.visibility = INVISIBLE
                 if (doCountDown) {
                     timerText.visibility = VISIBLE
-                    val countDown = object : CountDownTimer(120000, 1000) {
+                    val countDown = object : CountDownTimer(settings.timeout, 1000) {
                         @SuppressLint("SetTextI18n")
                         override fun onTick(millisUntilFinished: Long) {
                             timerText.text =
@@ -153,6 +163,13 @@ class MainActivity : AppCompatActivity() {
                             done.visibility = VISIBLE
                             timerText.text = ""
                             timerText.visibility = INVISIBLE
+                            goText.visibility = VISIBLE
+                            NotificationManagerCompat.from(baseContext).notify(1,
+                                NotificationCompat.Builder(baseContext, NotificationChannel.DEFAULT_CHANNEL_ID)
+                                    //.setContentText(getString(R.string.go))
+                                    .setSmallIcon(R.drawable.ic_launcher_background)
+                                    .setVibrate(longArrayOf(100, 1000, 300, 300, 300, 300))
+                                    .build())
                         }
                     }
                     countDown.start()
@@ -179,6 +196,33 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+    }
+
+    private fun loadSettings(workout: String): WorkoutSettings {
+        val workoutSettings = WorkoutSettings(120000)
+        try {
+            val settingsName = getString(R.string.settings)
+            var settings = assets.open(settingsName).bufferedReader().readText()
+            var json = JSONObject(settings)
+            var workoutObj = json.getJSONObject(workout)
+            workoutSettings.timeout = workoutObj.getLong("timeout")
+            val file = File(getExternalFilesDir(null), settingsName)
+            if (!file.exists()) {
+                file.writeText(settings)
+            } else {
+                settings = file.readText()
+                json = JSONObject(settings)
+                workoutObj = json.getJSONObject(workout)
+                workoutSettings.timeout = workoutObj.getLong("timeout")
+            }
+        } catch (e: Exception) {
+            //
+        }
+        if (workoutSettings.timeout < 1 || workoutSettings.timeout > 600) {
+            workoutSettings.timeout = 120
+        }
+        workoutSettings.timeout *= 1000
+        return workoutSettings
     }
 
     fun twoDigits(num: Long): String {
