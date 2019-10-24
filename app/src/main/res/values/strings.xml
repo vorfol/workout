@@ -3,7 +3,7 @@
     <string name="promptWorkout">Choose a workout</string>
     <string name="prompt">Choose a week series</string>
     <string name="done">Done!</string>
-    <string name="go">Do exercise\nand press "Done"</string>
+    <string name="go">GO</string>
     <string name="congratulations">Congratulations!</string>
     <string name="up">+</string>
     <string name="down">-</string>

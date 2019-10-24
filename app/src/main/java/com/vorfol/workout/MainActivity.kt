@@ -1,9 +1,9 @@
 package com.vorfol.workout
 
 import android.annotation.SuppressLint
-import android.app.Notification
-import android.app.NotificationChannel
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -23,6 +23,11 @@ import java.util.*
 data class WorkoutSettings(var timeout: Long)
 
 class MainActivity : AppCompatActivity() {
+
+    companion object{
+        const val REQUEST_CODE = 123
+        const val NOTIFY_ID = 1
+    }
 
     private val lastWorkoutKey = "lastWorkout"
     private val lastAmountKey = "lastAmount"
@@ -164,12 +169,7 @@ class MainActivity : AppCompatActivity() {
                             timerText.text = ""
                             timerText.visibility = INVISIBLE
                             goText.visibility = VISIBLE
-                            NotificationManagerCompat.from(baseContext).notify(1,
-                                NotificationCompat.Builder(baseContext, NotificationChannel.DEFAULT_CHANNEL_ID)
-                                    //.setContentText(getString(R.string.go))
-                                    .setSmallIcon(R.drawable.ic_launcher_background)
-                                    .setVibrate(longArrayOf(100, 1000, 300, 300, 300, 300))
-                                    .build())
+                            showNotification()
                         }
                     }
                     countDown.start()
@@ -196,6 +196,26 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+    }
+
+    private fun showNotification() {
+        val intent = Intent(baseContext, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        val pendingIntent = PendingIntent.getActivity(
+            baseContext,
+            REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT)
+        NotificationManagerCompat.from(baseContext).notify(
+                NOTIFY_ID,
+                NotificationCompat.Builder(baseContext) //, NotificationChannel.DEFAULT_CHANNEL_ID)
+                    .setContentTitle(getString(R.string.app_name))
+                    .setContentText(getString(R.string.go))
+                    .setSmallIcon(R.drawable.ic_launcher_background)
+                    .setVibrate(longArrayOf(100, 1000, 300, 300, 300, 300))
+                    .setAutoCancel(true)
+                    .setContentIntent(pendingIntent)
+                    .build())
     }
 
     private fun loadSettings(workout: String): WorkoutSettings {
